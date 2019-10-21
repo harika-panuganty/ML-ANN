@@ -1,0 +1,79 @@
+---
+title: "ML_Assignment4_Readmission"
+author: "Harika Panuganty"
+date: "7/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+rm(list=ls())
+library(caret)
+library(pROC)
+library(DMwR)
+
+```
+
+```{r}
+
+#Section 1: EMR Bots 30-day Readmission study
+
+#Using the training datasets, create the following models:
+
+#1. Artificial Neural Network (ANN)
+
+readmission_train.ann <- read.csv("~/Desktop/datasets/readmission_train.csv")
+
+readmission_test.ann <- read.csv("~/Desktop/datasets/readmission_test.csv")
+
+#center and scaling for nnet
+processed_readmission.ann <- preProcess(readmission_train.ann, method = c("center", "scale"))
+
+#new train
+new_readmission_train <- predict(processed_readmission.ann, readmission_train.ann)
+
+#new test
+new_readmission_test <- predict(processed_readmission.ann, readmission_test.ann)
+
+#pre-processing to change outcome variable into levels
+#predicing outcome 1=readmitted, 0=not readmitted
+new_readmission_train$outcome <- as.factor(new_readmission_train$outcome)
+#levels(new_readmission_train$outcome) <- c(0, 1)
+levels(new_readmission_train$outcome) <- c("No", "Yes")
+
+
+#SMOTE works when outcome is a factor, here we use 0s, 1s; using SMOTE bc data is imbalanced 
+readmission_trainSampled <- SMOTE (outcome ~ PatientGender + PatientRace + PatientEncounterAge +
+CBC..ABSOLUTE.LYMPHOCYTES + CBC..ABSOLUTE.NEUTROPHILS + CBC..BASOPHILS + CBC..EOSINOPHILS + CBC..HEMATOCRIT + CBC..HEMOGLOBIN + CBC..PLATELET.COUNT + CBC..RED.BLOOD.CELL.COUNT + CBC..WHITE.BLOOD.CELL.COUNT + METABOLIC..ALBUMIN + METABOLIC..BILI.TOTAL + METABOLIC..BUN + METABOLIC..CALCIUM + METABOLIC..CREATININE + METABOLIC..POTASSIUM + METABOLIC..SODIUM , data = new_readmission_train, perc.over = 120, perc.under = 100, k = 1)
+
+set.seed(456)
+readmission_objGrid_n <- expand.grid(size = seq(2, 10, by = 1), decay = 1e-04)
+fitControl <- trainControl(method = "cv", number = 5)
+
+readmission.ann.model <- train(outcome ~ PatientGender + PatientRace + PatientEncounterAge +
+CBC..ABSOLUTE.LYMPHOCYTES + CBC..ABSOLUTE.NEUTROPHILS + CBC..BASOPHILS + CBC..EOSINOPHILS + CBC..HEMATOCRIT + CBC..HEMOGLOBIN + CBC..PLATELET.COUNT + CBC..RED.BLOOD.CELL.COUNT + CBC..WHITE.BLOOD.CELL.COUNT + METABOLIC..ALBUMIN + METABOLIC..BILI.TOTAL + METABOLIC..BUN + METABOLIC..CALCIUM + METABOLIC..CREATININE + METABOLIC..POTASSIUM + METABOLIC..SODIUM, data = readmission_trainSampled, method = "nnet", trControl = fitControl, tuneGrid = readmission_objGrid_n, trace = FALSE)
+
+preds_readmission_ann <- predict(object = readmission.ann.model, new_readmission_test, test = "prob")
+#note: $ results in invalid operator for atomic vectors and [[]] results in subscript out of bounds error
+new_readmission_test$predicted_outcome_nnet <- preds_readmission_ann$Yes
+
+readmission_nnet_perf <- roc(response = readmission_test_transformed$outcome, predictor = readmission_test_transformed$predicted_outcome_nnet)
+
+
+```
+
+
+```{r}
+is.recursive(preds_readmission_ann)
+
+```
+

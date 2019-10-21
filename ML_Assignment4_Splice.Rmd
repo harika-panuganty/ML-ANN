@@ -1,0 +1,147 @@
+---
+title: "ML_Assignment4_splicejn"
+author: "Harika Panuganty"
+date: "7/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+rm(list=ls())
+library(caret)
+library(pROC)
+library(plyr)
+library(dplyr)
+
+```
+
+```{r}
+#Section 3: Splice Junction
+
+#Using the training datasets, create the following models:
+
+#Artificial Neural Network (ANN)
+
+#a) EI vs non-EI
+
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_test_data.Rdata")
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_train_data.Rdata")
+
+splice_test <- d.test.features
+splice_train <- d.train.features
+
+preProcValues_splice.ei <- preProcess(splice_train, method = c("center", "scale"))
+
+new_splice_train.ei <- predict(preProcValues_splice.ei, splice_train)
+new_splice_test.ei <- predict(preProcValues_splice.ei, splice_test)
+
+new_splice_train.ei %>% mutate(class = ifelse(class == "EI", "EI", "Non-EI")) -> new_splice_train.ei
+new_splice_test.ei %>% mutate(class = ifelse(class == "EI", "EI", "Non-EI")) -> new_splice_test.ei
+
+new_splice_train.ei$class <- as.factor(new_splice_train.ei$class)
+new_splice_test.ei$class <- as.factor(new_splice_test.ei$class)
+
+set.seed(456)
+objGrid.ei <- expand.grid(size = seq(2, 10, by = 1), decay = 1e-04)
+fitControl <- trainControl(method = "cv", number = 5)
+
+splice_ei.ann.model <- train(class ~ ., data = new_splice_train.ei, method = "nnet", trControl = fitControl, tuneGrid = objGrid.ei, trace = FALSE)
+
+splice_ei_preds <- predict(object = splice_ei.ann.model , new_splice_test.ei, type = "prob")
+new_splice_test.ei$predicted_class_nnet <- splice_ei_preds$EI
+
+splice_nnet_perf.ei <- roc(response = new_splice_test.ei$class, predictor = new_splice_test.ei$predicted_class_nnet)
+
+print(pROC::auc(splice_nnet_perf.ei))
+
+print(pROC::ci.auc(splice_nnet_perf.ei))
+
+```
+
+```{r}
+
+#b) IE vs non-IE
+
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_test_data.Rdata")
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_train_data.Rdata")
+
+splice_test <- d.test.features
+splice_train <- d.train.features
+
+preProcValues_splice.ie <- preProcess(splice_train, method = c("center", "scale"))
+
+new_splice_train.ie <- predict(preProcValues_splice.ie, splice_train)
+new_splice_test.ie <- predict(preProcValues_splice.ie, splice_test)
+
+new_splice_train.ie %>% mutate(class = ifelse(class == "IE", "IE", "Non-IE")) -> new_splice_train.ie
+new_splice_test.ie %>% mutate(class = ifelse(class == "IE", "IE", "Non-IE")) -> new_splice_test.ie
+
+new_splice_train.ie$class <- as.factor(new_splice_train.ie$class)
+new_splice_test.ie$class <- as.factor(new_splice_test.ie$class)
+
+set.seed(456)
+objGrid.ie <- expand.grid(size = seq(2, 10, by = 1), decay = 1e-04)
+fitControl <- trainControl(method = "cv", number = 5)
+
+splice_ie.ann.model <- train(class ~ ., data = new_splice_train.ie, method = "nnet", trControl = fitControl, tuneGrid = objGrid.ie, trace = FALSE)
+
+splice_ie_preds <- predict(object = splice_ie.ann.model , new_splice_test.ie, type = "prob")
+new_splice_test.ie$predicted_class_nnet.ie <- splice_ie_preds$IE
+
+splice_nnet_perf.ie <- roc(response = new_splice_test.ie$class, predictor = new_splice_test.ie$predicted_class_nnet.ie)
+
+print(pROC::auc(splice_nnet_perf.ie))
+
+print(pROC::ci.auc(splice_nnet_perf.ie))
+
+
+```
+
+```{r}
+
+#c) EI/IE vs non-IE-EI
+
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_test_data.Rdata")
+load("/Users/harikapanuganty/Desktop/datasets/splicejn_train_data.Rdata")
+
+splice_test <- d.test.features
+splice_train <- d.train.features
+
+preProcValues_splice.n <- preProcess(splice_train, method = c("center", "scale"))
+
+new_splice_train.n <- predict(preProcValues_splice.n, splice_train)
+new_splice_test.n <- predict(preProcValues_splice.n, splice_test)
+
+new_splice_train.n %>% mutate(class = ifelse(class == "IE", "EI", ifelse(class == "EI","EI", "Non-IE-EI"))) -> new_splice_train.n
+new_splice_test.n %>% mutate(class = ifelse(class == "IE", "EI", ifelse(class == "EI","EI", "Non-IE-EI"))) -> new_splice_test.n
+
+new_splice_train.n$class <- as.factor(new_splice_train.n$class)
+new_splice_test.n$class <- as.factor(new_splice_test.n$class)
+
+set.seed(456)
+objGrid.n <- expand.grid(size = seq(2, 10, by = 1), decay = 1e-04)
+fitControl <- trainControl(method = "cv", number = 5)
+
+splice_n.ann.model <- train(class ~ ., data = new_splice_train.n, method = "nnet", trControl = fitControl, tuneGrid = objGrid.n, trace = FALSE)
+
+splice_n_preds <- predict(object = splice_n.ann.model , new_splice_test.n, type = "prob")
+new_splice_test.n$predicted_class_nnet.n <- splice_n_preds$EI
+
+splice_nnet_perf.n <- roc(response = new_splice_test.n$class, predictor = new_splice_test.n$predicted_class_nnet.n)
+
+print(pROC::auc(splice_nnet_perf.n))
+
+print(pROC::ci.auc(splice_nnet_perf.n))
+
+```
+
