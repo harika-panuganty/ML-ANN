@@ -1,6 +1,6 @@
 # ML-ANN
 
-This weekly project for my Intermediate Applied Data Analysis class from the MscBMI Program at The University of Chicago tested on ANN in R. The code for this repository elaborates on the specific code used for Artificial Neural Network (ANN) for three Kaggle datasets in R:
+This weekly project for my Intermediate Applied Data Analysis class from the MscBMI Program at The University of Chicago tested on ANN in R. The code for this repository elaborates on the code and specific parameters used for Artificial Neural Network (ANN) for three Kaggle datasets:
 
 
 1. A large patient readmission dataset https://inclass.kaggle.com/c/predicting-30-day-hospital-readmissions
