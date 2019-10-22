@@ -1,6 +1,6 @@
 # ML-ANN
 
-This weekly project involved running Artificial Neural Network (ANN) Models for three Kaggle datasets in R:
+This is the ANN week project for my Intermediate Applied Data Analysis class from the MscBMI Program at The University of Chicago tested on Linear Regression in R. The code for this repository elaborates on the specific code used to  running Artificial Neural Network (ANN) Models for three Kaggle datasets in R:
 
 1. A large patient readmission dataset https://inclass.kaggle.com/c/predicting-30-day-hospital-readmissions
 
